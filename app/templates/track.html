@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Live Tracking - Mileage Tracker{% endblock %}
+
+{% block head %}
+<style>
+.btn-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  font-size: 1.25rem;
+}
+.btn-circle i {
+  font-size: 1.6rem;
+}
+.btn-stop-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: none;
+  background-color: #dc3545;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  font-size: 1.25rem;
+}
+.controls-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.type-btn {
+  min-width: 100px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">Live Tracking</h5>
+      </div>
+      <div class="card-body">
+        <div id="tracking-status" class="alert alert-secondary">
+          <strong>Status:</strong> <span id="status-text">Idle</span>
+          <div id="active-details" class="mt-2 d-none">
+            <div class="d-flex justify-content-between">
+              <div>Session: <strong id="session-id">-</strong></div>
+              <div>Points: <strong id="points-count">0</strong></div>
+            </div>
+            <div class="mt-1">Distance: <strong id="distance-miles">0.00</strong> <span id="distance-unit">{% if current_unit == 'km' %}km{% else %}mi{% endif %}</span></div>
+          </div>
+        </div>
+
+        <form id="start-form" class="row g-2">
+          <div class="col-12">
+            <label class="form-label">Vehicle</label>
+            <input type="text" id="vehicle" class="form-control" placeholder="Car" value="{{ default_vehicle.name if default_vehicle else 'Car' }}">
+          </div>
+          <div class="col-12 d-none">
+            <label class="form-label">Note</label>
+            <input type="text" id="note" class="form-control" placeholder="Optional trip note">
+          </div>
+          <div class="col-12 text-center">
+            <label class="form-label d-block">Trip Type</label>
+            <div class="btn-group" role="group" aria-label="Trip type">
+              <button type="button" id="type-personal" class="btn btn-outline-primary type-btn">Personal</button>
+              <button type="button" id="type-business" class="btn btn-outline-primary type-btn active">Business</button>
+            </div>
+            <input type="hidden" id="trip_type" value="business">
+          </div>
+          <div class="col-12 text-center mt-3">
+            <button type="submit" class="btn btn-success btn-circle">
+              <span>Start</span>
+            </button>
+          </div>
+        </form>
+
+        <div id="live-controls" class="d-none mt-4">
+          <div class="alert alert-info text-center">
+            <div class="fw-semibold mb-2">Tracking active</div>
+            <small class="text-muted">GPS fixes are being recorded.</small>
+            <div class="controls-row mt-3">
+              <button id="stop-btn" class="btn-stop-circle">
+                <span>Stop</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="error-box" class="alert alert-danger d-none mt-3" role="alert"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/track.js') }}"></script>
+{% endblock %}

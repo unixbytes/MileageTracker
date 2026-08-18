@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Trips - Mileage Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Admin Trips</h5>
+        <a href="/admin" class="btn btn-sm btn-outline-secondary">Back to Dashboard</a>
+      </div>
+      <div class="card-body">
+        <form method="get" action="/admin/trips" class="row g-2 mb-3">
+          <div class="col-sm-4">
+            <select name="user_id" class="form-select">
+              <option value="">All users</option>
+              {% for u in users %}
+              <option value="{{ u.id }}" {% if selected_user_id == u.id %}selected{% endif %}>{{ u.username }} ({{ u.email }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-sm-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+          </div>
+        </form>
+        {% if trips %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Vehicle</th>
+                <th>Distance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for trip in trips %}
+              <tr>
+                <td>{{ trip.id }}</td>
+                <td>
+                  {% set owner = users|selectattr('id', 'equalto', trip.user_id)|first %}
+                  {{ owner.username if owner else '—' }}
+                </td>
+                <td>{{ trip.date }}</td>
+                <td>{{ trip.trip_type }}</td>
+                <td>{{ trip.vehicle }}</td>
+                <td>{{ trip.miles }} {{ trip.recorded_unit }}</td>
+                <td class="d-flex gap-2">
+                  <a href="/admin/trips/{{ trip.id }}/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
+                  <form method="POST" action="/admin/trips/{{ trip.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this trip?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted">No trips found.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

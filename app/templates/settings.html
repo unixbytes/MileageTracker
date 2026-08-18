@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Mileage Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">Settings</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            <label class="form-label">Measurement Unit</label>
+            <div class="btn-group w-100" role="group" aria-label="Measurement unit">
+              <button type="submit" name="unit" value="mi" class="btn {% if current_unit == 'mi' %}btn-primary{% else %}btn-outline-primary{% endif %}">Miles</button>
+              <button type="submit" name="unit" value="km" class="btn {% if current_unit == 'km' %}btn-primary{% else %}btn-outline-primary{% endif %}">Kilometers</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Vehicles</h5>
+        {% if vehicles %}
+        <span class="text-muted">Default: <strong>{{ vehicles|selectattr('is_default')|map(attribute='name')|first|default('None') }}</strong></span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <form method="POST" class="row g-2 mb-3">
+          <div class="col-sm-8">
+            <input type="text" name="vehicle_name" class="form-control" placeholder="Add vehicle" required>
+          </div>
+          <div class="col-sm-2 d-flex align-items-center">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="set_default" id="setDefault">
+              <label class="form-check-label" for="setDefault">Default</label>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <button type="submit" class="btn btn-primary w-100">Add</button>
+          </div>
+        </form>
+
+        {% if vehicles %}
+        <div class="list-group">
+          {% for v in vehicles %}
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ v.name }}</strong>
+              {% if v.is_default %}
+              <span class="badge bg-success ms-2">Default</span>
+              {% endif %}
+              {% if v.odometer is not none %}
+              <div class="small text-muted">Odometer: {{ "%.1f"|format(v.odometer) }} {{ current_unit }}</div>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+              {% if not v.is_default %}
+              <form method="POST" class="d-inline">
+                <input type="hidden" name="default_vehicle" value="{{ v.id }}">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Set Default</button>
+              </form>
+              {% endif %}
+              <form method="POST" class="d-inline" onsubmit="return confirm('Delete this vehicle?');">
+                <input type="hidden" name="delete_vehicle" value="{{ v.id }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted">No vehicles added yet.</div>
+        {% endif %}
+
+        <form method="POST" class="row g-2 mt-3">
+          <div class="col-sm-5">
+            <select name="odometer_vehicle" class="form-select" required>
+              <option value="">Select Vehicle</option>
+              {% for v in vehicles %}
+              <option value="{{ v.id }}">{{ v.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-sm-5">
+            <input type="number" step="any" name="odometer_value" class="form-control" placeholder="Odometer" required>
+          </div>
+          <div class="col-sm-2">
+            <button type="submit" class="btn btn-primary w-100">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">Profile</h5>
+      </div>
+      <div class="card-body">
+        <p class="mb-1"><strong>Username:</strong> {{ session.get('username', '') }}</p>
+        <p class="mb-2"><strong>Email:</strong> {{ (user.email if user is defined else '') }}</p>
+        <a href="/settings/profile" class="btn btn-outline-primary btn-sm">Edit Profile</a>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">Change Password</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="/settings/password" class="row g-2">
+          {{ form.hidden_tag() }}
+          <div class="col-md-4">
+            <input type="password" name="current_password" class="form-control" placeholder="Current password" required>
+          </div>
+          <div class="col-md-3">
+            <input type="password" name="new_password" class="form-control" placeholder="New password" required>
+          </div>
+          <div class="col-md-3">
+            <input type="password" name="confirm_password" class="form-control" placeholder="Confirm new password" required>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Update Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

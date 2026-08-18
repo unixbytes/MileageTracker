@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+env/
+venv/
+
+# Flask instance
+instance/
+*.db
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Lockfiles
+uv.lock
+
+# Hermes local files
+.hermes/
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,32 @@
+[project]
+name = "mileage-tracker"
+version = "0.1.0"
+description = "Production-ready driving mileage tracker"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.0",
+    "flask-sqlalchemy>=3.1",
+    "flask-wtf>=1.2",
+    "wtforms>=3.1",
+    "email-validator",
+    "flask-migrate>=4.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

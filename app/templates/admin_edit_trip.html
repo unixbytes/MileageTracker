@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Trip - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Edit Trip #{{ trip.id }}</h5>
+        <a href="/admin/trips" class="btn btn-sm btn-outline-secondary">Back</a>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+          <div class="row g-3">
+            <div class="col-md-4">
+              {{ form.date.label(class="form-label") }}
+              {{ form.date(class="form-control") }}
+            </div>
+            <div class="col-md-4">
+              {{ form.trip_type.label(class="form-label") }}
+              {{ form.trip_type(class="form-select") }}
+            </div>
+            <div class="col-md-4">
+              {{ form.vehicle.label(class="form-label") }}
+              {{ form.vehicle(class="form-control") }}
+            </div>
+            <div class="col-md-4">
+              {{ form.start_odometer.label(class="form-label") }}
+              {{ form.start_odometer(class="form-control") }}
+            </div>
+            <div class="col-md-4">
+              {{ form.end_odometer.label(class="form-label") }}
+              {{ form.end_odometer(class="form-control") }}
+            </div>
+            <div class="col-md-4">
+              {{ form.miles.label(class="form-label") }}
+              {{ form.miles(class="form-control") }}
+            </div>
+            <div class="col-12">
+              {{ form.purpose.label(class="form-label") }}
+              {{ form.purpose(class="form-control", rows="2") }}
+            </div>
+            <div class="col-12">
+              {{ form.notes.label(class="form-label") }}
+              {{ form.notes(class="form-control", rows="2") }}
+            </div>
+            <div class="col-12">
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

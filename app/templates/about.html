@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}About - Mileage Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-5">
+        <h1 class="h3 mb-3">About Mileage Tracker</h1>
+        <p class="text-muted">A simple, fast, and privacy-friendly way to log and review your driving mileage.</p>
+        <hr>
+
+        <h2 class="h6 text-uppercase text-muted mb-2">How to Use</h2>
+        <ol class="ps-3">
+          <li>Open the <strong>Track</strong> page to start live tracking, or open <strong>Trips</strong> to manually log a trip.</li>
+          <li>Select the trip type: <strong>Personal</strong>, <strong>Business</strong>, <strong>Medical</strong>, or <strong>Charity</strong>.</li>
+          <li>Enter or confirm the vehicle name. You can manage vehicles in <strong>Settings</strong>.</li>
+          <li>Start tracking to record GPS points automatically. Press <strong>Stop</strong> when finished.</li>
+          <li>Open the trip detail page to view the recorded route.</li>
+          <li>Use <strong>Reports</strong> to filter trips by month and trip type, and export data to CSV from there.</li>
+        </ol>
+
+        <h2 class="h6 text-uppercase text-muted mb-2 mt-4">Features</h2>
+        <ul class="ps-3">
+          <li><strong>Live Tracking:</strong> Records GPS points and calculates distance automatically. Distance is shown in your chosen unit.</li>
+          <li><strong>Trip Types:</strong> Personal, Business, Medical, and Charity.</li>
+          <li><strong>Settings:</strong> Change the measurement unit between Miles and Kilometers. Add, remove, and set a default vehicle. Update your profile/email and change your password.</li>
+          <li><strong>Reports:</strong> Filter trips by month and trip type. Export trips as CSV.</li>
+          <li><strong>Trip Photos:</strong> Attach a photo to a trip record.</li>
+          <li><strong>Dark Mode:</strong> Toggle dark mode from the top navigation.</li>
+        </ul>
+
+        <h2 class="h6 text-uppercase text-muted mb-2 mt-4">Privacy</h2>
+        <p>Your data remains on your local system. No information is sent to external servers or third-party services. This application does not collect, store, or share personal data outside of your own environment.</p>
+        <p class="small text-muted mb-0">Disclaimer: Use of this tool is at your own risk. The provider is not liable for any data loss, inaccuracies, or decisions made using this application. No warranties are made regarding availability, accuracy, or fitness for a particular purpose.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

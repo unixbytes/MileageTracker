@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Trip #{{ trip.id }} - Mileage Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Trip Details</h5>
+        <div>
+          <a href="/" class="btn btn-sm btn-secondary">Back to List</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-3">Date</dt>
+          <dd class="col-sm-9">{{ trip.date.strftime('%A, %B %d, %Y') }}</dd>
+
+          <dt class="col-sm-3">Type</dt>
+          <dd class="col-sm-9"><span class="badge bg-{% if trip.trip_type == 'business' %}info{% elif trip.trip_type == 'medical' %}warning{% elif trip.trip_type == 'charity' %}success{% else %}secondary{% endif %}">{{ trip.trip_type|title }}</span></dd>
+
+          <dt class="col-sm-3">Vehicle</dt>
+          <dd class="col-sm-9">{{ trip.vehicle }}</dd>
+
+          <dt class="col-sm-3">Distance</dt>
+          <dd class="col-sm-9">{{ format_distance(trip.miles, trip.recorded_unit) }} {{ trip.recorded_unit }}</dd>
+
+          {% if trip.start_odometer is not none %}
+          <dt class="col-sm-3">Start Odometer</dt>
+          <dd class="col-sm-9">{{ "%.1f"|format(trip.start_odometer) }}</dd>
+          {% endif %}
+
+          {% if trip.end_odometer is not none %}
+          <dt class="col-sm-3">End Odometer</dt>
+          <dd class="col-sm-9">{{ "%.1f"|format(trip.end_odometer) }}</dd>
+          {% endif %}
+
+          {% if trip.purpose %}
+          <dt class="col-sm-3">Purpose</dt>
+          <dd class="col-sm-9">{{ trip.purpose }}</dd>
+          {% endif %}
+
+          {% if trip.notes %}
+          <dt class="col-sm-3">Notes</dt>
+          <dd class="col-sm-9">{{ trip.notes }}</dd>
+          {% endif %}
+
+          {% if trip.tracking_session_id %}
+          <dt class="col-sm-3">Route</dt>
+          <dd class="col-sm-9">
+            <div id="trip-map" style="height: 280px; border-radius: 8px;"></div>
+          </dd>
+          {% endif %}
+
+          <dt class="col-sm-3">Logged On</dt>
+          <dd class="col-sm-9">{{ trip.created_at.strftime('%B %d, %Y at %I:%M %p') }}</dd>
+        </dl>
+      </div>
+      <div class="card-footer bg-white text-end">
+        <form method="POST" action="{{ url_for('delete_trip', trip_id=trip.id) }}" class="d-inline" onsubmit="return confirm('Delete this trip permanently?');">
+          <button type="submit" class="btn btn-danger">Delete Trip</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if trip.tracking_session_id %}
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  const container = document.getElementById('trip-map');
+  if (!container || !window.L) return;
+  fetch('/api/track/session/{{ trip.tracking_session_id }}/points').then(function(r){ return r.json(); }).then(function(data) {
+    const points = data.points || [];
+    if (!points.length) return;
+    const map = L.map('trip-map').setView([points[0].lat, points[0].lon], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+    const latlngs = points.map(function(p){ return [p.lat, p.lon]; });
+    L.polyline(latlngs, { color: '#2563eb', weight: 4 }).addTo(map);
+    L.marker([points[0].lat, points[0].lon]).addTo(map).bindTooltip('Start');
+    L.marker([points[points.length-1].lat, points[points.length-1].lon]).addTo(map).bindTooltip('End');
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

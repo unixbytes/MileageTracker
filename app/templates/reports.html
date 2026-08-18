@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Mileage Tracker{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">Filters</h5>
+      </div>
+      <div class="card-body">
+        <form method="GET" action="/reports" novalidate>
+          <div class="mb-3">
+            <label for="month" class="form-label">Month</label>
+            <input type="month" name="month" id="month" class="form-control" value="{{ month }}">
+          </div>
+          <div class="mb-3">
+            <label for="trip_type" class="form-label">Trip Type</label>
+            <select name="trip_type" id="trip_type" class="form-select">
+              <option value="">All Types</option>
+              {% for t in types %}
+              <option value="{{ t }}" {% if trip_type == t %}selected{% endif %}>{{ t|title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+          {% if month or trip_type %}
+          <a href="/reports" class="btn btn-outline-secondary w-100 mt-2">Clear</a>
+          {% endif %}
+          <div class="mt-2">
+            <a href="/export" class="btn btn-success w-100">Export CSV</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="mb-0">Distance Trend</h5>
+          <div class="text-muted">Total: <strong>{{ format_distance(total_miles) }}</strong> {{ current_unit }}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="distanceChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">Report</h5>
+      </div>
+      <div class="card-body p-0">
+        {% if trips %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Vehicle</th>
+                <th class="text-end">{% if current_unit == 'km' %}Kilometers{% else %}Miles{% endif %}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for trip in trips %}
+              <tr>
+                <td>{{ trip.date.strftime('%b %d, %Y') }}</td>
+                <td><span class="badge bg-{% if trip.trip_type == 'business' %}info{% elif trip.trip_type == 'medical' %}warning{% elif trip.trip_type == 'charity' %}success{% else %}secondary{% endif %}">{{ trip.trip_type|title }}</span></td>
+                <td>{{ trip.vehicle }}</td>
+                <td class="text-end">{{ format_distance(trip.miles, trip.recorded_unit) }} {{ trip.recorded_unit }}</td>
+                <td class="text-end">
+                  <a href="{{ url_for('trip_detail', trip_id=trip.id) }}" class="btn btn-sm btn-light">View</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">No trips match the selected filters.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Trips - Mileage Tracker{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Log New Trip</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.date.label(class="form-label") }}
+              {{ form.date(class="form-control", type="date") }}
+              {% for error in form.date.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.trip_type.label(class="form-label") }}
+              {{ form.trip_type(class="form-select") }}
+            </div>
+            <div class="col-12">
+              {{ form.vehicle.label(class="form-label") }}
+              {{ form.vehicle(class="form-control", placeholder="e.g., 2022 Honda Civic", autocomplete="off") }}
+              {% for error in form.vehicle.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.start_odometer.label(class="form-label") }}
+              {{ form.start_odometer(class="form-control", placeholder="e.g., 45000") }}
+              {% for error in form.start_odometer.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.end_odometer.label(class="form-label") }}
+              {{ form.end_odometer(class="form-control", placeholder="e.g., 45150") }}
+              {% for error in form.end_odometer.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-12">
+              {{ form.miles.label(class="form-label") }}
+              <div class="input-group">
+                {{ form.miles(class="form-control", placeholder="Auto-calculated if left blank") }}
+                <span class="input-group-text">{{ current_unit }}</span>
+              </div>
+              {% for error in form.miles.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text">Leave blank to auto-calculate from odometer readings.</div>
+            </div>
+            <div class="col-12">
+              {{ form.purpose.label(class="form-label") }}
+              {{ form.purpose(class="form-control", rows="2", placeholder="What was this trip for?") }}
+            </div>
+            <div class="col-12">
+              {{ form.notes.label(class="form-label") }}
+              {{ form.notes(class="form-control", rows="2", placeholder="Any additional notes") }}
+            </div>
+            <div class="col-12">
+              {{ form.photo.label(class="form-label") }}
+              {{ form.photo(class="form-control") }}
+            </div>
+            <div class="col-12">
+              {{ form.submit(class="btn btn-primary w-100") }}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="mb-0">Trip History</h5>
+          <div class="text-muted">Total: <strong>{{ format_distance(total_miles) }}</strong> {{ current_unit }}</div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <form method="GET" class="p-3 border-bottom bg-light">
+          <div class="row g-2">
+            <div class="col-md-3">
+              <input type="date" name="from_date" class="form-control form-control-sm" value="{{ from_date }}" placeholder="From">
+            </div>
+            <div class="col-md-3">
+              <input type="date" name="to_date" class="form-control form-control-sm" value="{{ to_date }}" placeholder="To">
+            </div>
+            <div class="col-md-3">
+              <input type="text" name="vehicle" class="form-control form-control-sm" value="{{ vehicle_filter }}" placeholder="Vehicle">
+            </div>
+            <div class="col-md-3">
+              <select name="type" class="form-select form-select-sm">
+                <option value="">All Types</option>
+                {% for val, label in form.trip_type.choices %}
+                  <option value="{{ val }}" {% if type_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-8">
+              <input type="text" name="search" class="form-control form-control-sm" value="{{ search }}" placeholder="Search purpose or notes...">
+            </div>
+            <div class="col-md-4 text-end">
+              <a href="/trips" class="btn btn-outline-secondary btn-sm me-1">Clear</a>
+              <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            </div>
+          </div>
+        </form>
+
+        {% if trips %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Vehicle</th>
+                <th class="text-end">Distance</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for trip in trips %}
+              <tr>
+                <td>{{ trip.date.strftime('%b %d, %Y') }}</td>
+                <td><span class="badge bg-{% if trip.trip_type == 'business' %}info{% elif trip.trip_type == 'medical' %}warning{% elif trip.trip_type == 'charity' %}success{% else %}secondary{% endif %}">{{ trip.trip_type|title }}</span></td>
+                <td>{{ trip.vehicle }}</td>
+                <td class="text-end">{{ format_distance(trip.miles, trip.recorded_unit) }} {{ trip.recorded_unit }}</td>
+                <td class="text-end">
+                  <a href="{{ url_for('trip_detail', trip_id=trip.id) }}" class="btn btn-sm btn-light">View</a>
+                  <form method="POST" action="{{ url_for('delete_trip', trip_id=trip.id) }}" class="d-inline" onsubmit="return confirm('Delete this trip?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">No trips recorded yet.</div>
+        {% endif %}
+      </div>
+      {% if pagination.pages > 1 %}
+      <div class="card-footer bg-white">
+        <nav aria-label="Page navigation">
+          <ul class="pagination pagination-sm mb-0 justify-content-center">
+            {% if pagination.has_prev %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('index', page=pagination.prev_num, search=search, vehicle=vehicle_filter, type=type_filter, from_date=from_date, to_date=to_date) }}">Previous</a></li>
+            {% endif %}
+            {% for p in pagination.iter_pages() %}
+              {% if p %}
+                {% if p == pagination.page %}
+                  <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                {% else %}
+                  <li class="page-item"><a class="page-link" href="{{ url_for('index', page=p, search=search, vehicle=vehicle_filter, type=type_filter, from_date=from_date, to_date=to_date) }}">{{ p }}</a></li>
+                {% endif %}
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+              {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+              <li class="page-item"><a class="page-link" href="{{ url_for('index', page=pagination.next_num, search=search, vehicle=vehicle_filter, type=type_filter, from_date=from_date, to_date=to_date) }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
