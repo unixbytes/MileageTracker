@@ -15,7 +15,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import smtplib
 from email.message import EmailMessage
 from app.geo import haversine
-from flask_migrate import Migrate
+
+try:
+    from flask_migrate import Migrate
+except ImportError:  # pragma: no cover - optional dependency for migration tooling
+    Migrate = None
 
 db = SQLAlchemy()
 logger = logging.getLogger("mileage")
@@ -443,7 +447,8 @@ def create_app():
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     db.init_app(app)
-    migrate = Migrate(app, db)
+    if Migrate is not None:
+        migrate = Migrate(app, db)
 
     with app.app_context():
         db.create_all()
