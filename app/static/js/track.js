@@ -9,6 +9,7 @@
     pollTimer: null,
     wakeLock: null,
     queuedPoints: [],
+    lastPointSent: 0,
   };
 
   const els = {
@@ -67,7 +68,14 @@
 
   async function sendPoint({ lat, lon, accuracy }) {
     if (!state.sessionId) return;
+    if (state.pendingPoint) {
+      state.queuedPoints.push({ lat, lon, accuracy });
+      return;
+    }
+    state.pendingPoint = true;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
       const payload = {
         session_id: state.sessionId,
         lat,
@@ -79,11 +87,15 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
+      state.lastPointSent = Date.now();
       const data = await resp.json();
       if (!resp.ok) {
         console.error('point error', data);
+        state.queuedPoints.push({ lat, lon, accuracy });
         return;
       }
 
@@ -101,9 +113,30 @@
     }
   }
 
+  async function ensureWatch() {
+    if (!state.sessionId || state.watchId !== null || !navigator.geolocation) return;
+    try {
+      state.watchId = navigator.geolocation.watchPosition(
+        (pos) => onPosition(pos),
+        (err) => {
+          console.error('watchPosition error', err);
+          state.watchId = null;
+          ensureWatch();
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          distanceFilter: 10,
+        }
+      );
+    } catch (e) {
+      console.error('watchPosition start failed', e);
+      state.watchId = null;
+    }
+  }
+
   async function onPosition(pos) {
-    if (!state.sessionId || state.pendingPoint) return;
-    state.pendingPoint = true;
+    if (!state.sessionId) return;
     await sendPoint({
       lat: pos.coords.latitude,
       lon: pos.coords.longitude,
@@ -112,10 +145,9 @@
   }
 
   async function pollPosition() {
-    if (!state.sessionId || state.pendingPoint) return;
+    if (!state.sessionId) return;
     if (!navigator.geolocation) return;
 
-    state.pendingPoint = true;
     try {
       const pos = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -127,7 +159,6 @@
       await onPosition(pos);
     } catch (e) {
       console.warn('pollPosition error', e);
-      state.pendingPoint = false;
     }
   }
 
@@ -212,18 +243,7 @@
       els.pointsCount.textContent = '1';
       els.distanceMiles.textContent = '0.00';
 
-      state.watchId = navigator.geolocation.watchPosition(
-        (pos) => onPosition(pos),
-        (err) => {
-          console.error('watchPosition error', err);
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 0,
-          distanceFilter: 10,
-        }
-      );
-
+      ensureWatch();
       startPolling();
       await requestWakeLock();
     } catch (e) {
@@ -252,9 +272,6 @@
         navigator.geolocation.clearWatch(state.watchId);
       }
 
-      stopPolling();
-      await releaseWakeLock();
-
       state.watchId = null;
       state.sessionId = null;
       state.queuedPoints = [];
@@ -280,6 +297,9 @@
       }
     } catch (e) {
       showError('Failed to stop tracking: ' + (e.message || e));
+    } finally {
+      stopPolling();
+      await releaseWakeLock();
     }
   }
 
@@ -298,8 +318,10 @@
         els.pointsCount.textContent = String(data.points);
         els.distanceMiles.textContent = formatMetersToMiles(data.total_meters);
         startPolling();
+        ensureWatch();
         await retryQueuedPoints();
       } else {
+        state.sessionId = null;
         stopPolling();
       }
     } catch (e) {
